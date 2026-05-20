@@ -6,15 +6,3 @@
 # Datasource local storage ignored files
 /dataSources/
 /dataSources.local.xml
-
-# IntelliJ files
-.idea/
-*.iml
-
-# Build output
-target/
-out/
-*.class
-
-# macOS files
-.DS_Store
