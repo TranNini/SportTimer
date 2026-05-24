@@ -4,12 +4,17 @@ import java.awt.event.ActionEvent;
 
 public class SportTimer {
 
-    static int startTime = 10;
+    static int startTime = 60;
     static int timeleft = startTime;
 
     public static void main(String[] args) {
 
         JFrame window = new JFrame("SportTimer");
+
+        String input = JOptionPane.showInputDialog("Input time in seconds");
+
+        startTime = Integer.parseInt(input);
+        timeleft = startTime;
 
         JLabel timerLabel = new JLabel(String.valueOf(timeleft), SwingConstants.CENTER);
         timerLabel.setFont(new Font("Arial", Font.BOLD, 260));
@@ -53,6 +58,7 @@ public class SportTimer {
             } else {
                 timer.start();
                 startButton.setText("Restart");
+                Toolkit.getDefaultToolkit().beep();
             }
 
         });
@@ -75,8 +81,6 @@ public class SportTimer {
     AbstractAction = the action object
     actionPerformed = the code that runs
     doClick = fake a button click  */
-
-        Toolkit.getDefaultToolkit().beep();
 
     }
 }
