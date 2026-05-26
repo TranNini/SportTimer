@@ -19,9 +19,13 @@ public class SportTimer {
         JButton startButton = new JButton("Start");
         startButton.setFont(new Font("Arial", Font.BOLD, 50));
 
+        JButton setTime = new JButton("Set Time");
+        setTime.setFont(new Font("Arial", Font.BOLD,50));
+
         JPanel buttonPanel = new JPanel();
         buttonPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 80, 0));
         buttonPanel.add(startButton);
+        buttonPanel.add(setTime);
 
         window.setLayout(new BorderLayout());
         window.add(timerLabel, BorderLayout.CENTER);
@@ -108,7 +112,7 @@ public class SportTimer {
 
             timerLabel.setText(String.valueOf(timeleft));
 
-            if (timeleft == 0) {
+            if (timeleft <= 0) {
                 Timer runningTimer = (Timer) event.getSource();
                 Toolkit.getDefaultToolkit().beep();
                 runningTimer.stop();
@@ -125,6 +129,16 @@ public class SportTimer {
                 timerLabel.setText(String.valueOf(timeleft));
                 startButton.setText("Start");
             } else {
+                if (timeleft <=0) {
+                    timeleft = startTime;
+
+                    timerLabel.setFont(new Font("Arial", Font.BOLD, 260));
+                    timerLabel.setText(String.valueOf(timeleft));
+
+                    startButton.setText("Start");
+                    return;
+                }
+
                 timer.start();
                 startButton.setText("Restart");
                 Toolkit.getDefaultToolkit().beep();
