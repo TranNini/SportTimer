@@ -3,26 +3,33 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 
 public class TimerWindow {
-    static int startTime = 60;
-    static int timeleft = startTime;
+    private int startTime = 60;
+    private int timeleft = startTime;
+    private JFrame window;
+    private JLabel timerLabel;
+    private JButton startButton;
+    private JButton setTimeButton;
+    private JPanel buttonPanel;
+    private Timer timer;
+
 
     public TimerWindow () {
 
-        JFrame window = new JFrame("SportTimer");
+        window = new JFrame("SportTimer");
 
-        JLabel timerLabel = new JLabel(String.valueOf(timeleft), SwingConstants.CENTER);
+        timerLabel = new JLabel(String.valueOf(timeleft), SwingConstants.CENTER);
         timerLabel.setFont(new Font("Arial", Font.BOLD, 260));
 
-        JButton startButton = new JButton("Start");
+        startButton = new JButton("Start");
         startButton.setFont(new Font("Arial", Font.BOLD, 50));
 
-        JButton setTime = new JButton("Set Time");
-        setTime.setFont(new Font("Arial", Font.BOLD, 50));
+        setTimeButton = new JButton("Set Time");
+        setTimeButton.setFont(new Font("Arial", Font.BOLD, 50));
 
-        JPanel buttonPanel = new JPanel();
+        buttonPanel = new JPanel();
         buttonPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 80, 0));
         buttonPanel.add(startButton);
-        buttonPanel.add(setTime);
+        buttonPanel.add(setTimeButton);
 
         window.setLayout(new BorderLayout());
         window.add(timerLabel, BorderLayout.CENTER);
@@ -32,7 +39,7 @@ public class TimerWindow {
         window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         window.setVisible(true);
 
-        Timer timer = new Timer(1000, event -> {
+        timer = new Timer(1000, event -> {
             timeleft--;
 
             timerLabel.setText(String.valueOf(timeleft));
@@ -68,8 +75,11 @@ public class TimerWindow {
                 startButton.setText("Restart");
                 Toolkit.getDefaultToolkit().beep();
             }
-
         });
+
+            setTimeButton.addActionListener(event -> {
+                SetupDialog setupDialog = new SetupDialog(window,this);
+            });
 
         window.getRootPane()
                 .getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
@@ -96,12 +106,11 @@ public class TimerWindow {
                         startButton.doClick();
                     }
                 });
+    }
 
-/*  InputMap = which key?
-    ActionMap = what action?
-    AbstractAction = the action object
-    actionPerformed = the code that runs
-    doClick = fake a button click  */
-
+    public void setTime(int newTime) {
+        startTime = newTime;
+        timeleft = newTime;
+        timerLabel.setText(String.valueOf(timeleft));
     }
 }
