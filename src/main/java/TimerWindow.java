@@ -48,7 +48,7 @@ public class TimerWindow {
                 Timer runningTimer = (Timer) event.getSource();
                 Toolkit.getDefaultToolkit().beep();
                 runningTimer.stop();
-                timerLabel.setFont(new Font("Arial", Font.BOLD, 80));
+                timerLabel.setFont(new Font("Arial", Font.BOLD, 100));
                 timerLabel.setText("Well Done!");
             }
 
@@ -72,7 +72,7 @@ public class TimerWindow {
                 }
 
                 timer.start();
-                startButton.setText("Restart");
+                startButton.setText("Stop");
                 Toolkit.getDefaultToolkit().beep();
             }
         });
@@ -81,31 +81,42 @@ public class TimerWindow {
                 SetupDialog setupDialog = new SetupDialog(window,this);
             });
 
-        window.getRootPane()
-                .getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
-                .put(KeyStroke.getKeyStroke("SPACE"), "pressStartButton");
 
-        window.getRootPane()
-                .getActionMap()
-                .put("pressStartButton", new AbstractAction() {
+        JRootPane rootPane = window.getRootPane();
+        InputMap inputMap = rootPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+        ActionMap actionMap = rootPane.getActionMap();
+
+        inputMap.put(KeyStroke.getKeyStroke("LEFT"), "selectStartButton");
+        inputMap.put(KeyStroke.getKeyStroke("RIGHT"), "selectSetTimeButton");
+
+        actionMap.put("selectStartButton", new AbstractAction() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
-                        startButton.doClick();
+                        startButton.requestFocusInWindow();
                     }
                 });
 
-        window.getRootPane()
-                .getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
-                .put(KeyStroke.getKeyStroke("ENTER"), "pressStartButton");
-
-        window.getRootPane()
-                .getActionMap()
-                .put("pressStartButton", new AbstractAction() {
+        actionMap.put("selectSetTimeButton", new AbstractAction() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
-                        startButton.doClick();
+                        setTimeButton.requestFocusInWindow();
                     }
                 });
+
+        inputMap.put(KeyStroke.getKeyStroke("ENTER"), "clickSelectedButton");
+        inputMap.put(KeyStroke.getKeyStroke("SPACE"),"clickSelectedButton");
+
+        actionMap.put("clickSelectedButton", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (setTimeButton.hasFocus()) {
+                    setTimeButton.doClick();
+                } else {
+                    startButton.doClick();
+                }
+
+            }
+        });
     }
 
     public void setTime(int newTime) {
