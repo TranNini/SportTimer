@@ -17,7 +17,7 @@ public class TimerWindow {
 
         window = new JFrame("SportTimer");
 
-        timerLabel = new JLabel(String.valueOf(timeleft), SwingConstants.CENTER);
+        timerLabel = new JLabel(formatTime(timeleft), SwingConstants.CENTER);
         timerLabel.setFont(new Font("Arial", Font.BOLD, 260));
 
         startButton = new JButton("Start");
@@ -42,7 +42,7 @@ public class TimerWindow {
         timer = new Timer(1000, event -> {
             timeleft--;
 
-            timerLabel.setText(String.valueOf(timeleft));
+            timerLabel.setText(formatTime(timeleft));
 
             if (timeleft <= 0) {
                 Timer runningTimer = (Timer) event.getSource();
@@ -58,14 +58,14 @@ public class TimerWindow {
             if (timer.isRunning()) {
                 timer.stop();
                 timeleft = startTime;
-                timerLabel.setText(String.valueOf(timeleft));
+                timerLabel.setText(formatTime(timeleft));
                 startButton.setText("Start");
             } else {
                 if (timeleft <= 0) {
                     timeleft = startTime;
 
                     timerLabel.setFont(new Font("Arial", Font.BOLD, 260));
-                    timerLabel.setText(String.valueOf(timeleft));
+                    timerLabel.setText(formatTime(timeleft));
 
                     startButton.setText("Start");
                     return;
@@ -122,6 +122,17 @@ public class TimerWindow {
     public void setTime(int newTime) {
         startTime = newTime;
         timeleft = newTime;
-        timerLabel.setText(String.valueOf(timeleft));
+        timerLabel.setText(formatTime(timeleft));
+    }
+
+    private String formatTime(int totalSeconds) {
+        int minutes = totalSeconds / 60;
+        int seconds = totalSeconds % 60;
+
+        if (minutes > 0) {
+            return String.format("%02d:%02d", minutes, seconds);
+        }
+
+        return String.valueOf(seconds);
     }
 }
