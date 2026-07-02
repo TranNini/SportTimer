@@ -119,9 +119,9 @@ public class TimerWindow {
         });
     }
 
-    public void setTime(int newTime) {
-        startTime = newTime;
-        timeleft = newTime;
+    public void setTime(int timeInput) {
+        startTime = timeInput;
+        timeleft = timeInput;
         timerLabel.setText(formatTime(timeleft));
     }
 
