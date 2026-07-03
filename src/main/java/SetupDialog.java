@@ -1,6 +1,8 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
 public class SetupDialog {
 
@@ -16,8 +18,8 @@ public class SetupDialog {
         dialog.setLocationRelativeTo(parentWindow);
         dialog.setLayout(new BorderLayout());
 
-        JLabel infoLabel = new JLabel("Add time in seconds.", SwingConstants.CENTER);
-        infoLabel.setFont(new Font("Arial", Font.BOLD, 26));
+        JLabel previewLabel = new JLabel("Time 00:00");
+        previewLabel.setFont(new Font("Arial", Font.BOLD,30));
 
         timeField = new JTextField();
         timeField.setFont(new Font("Arial", Font.PLAIN, 30));
@@ -26,18 +28,53 @@ public class SetupDialog {
         JPanel inputPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         inputPanel.add(timeField);
 
+
+
+        timeField.getDocument().addDocumentListener(new DocumentListener() {
+
+            private void updatePreview() {
+                String userInput = timeField.getText();
+
+                if (userInput.isEmpty()) {
+                    previewLabel.setText("00:00");
+                    return;
+                }
+                int timeInput = Integer.parseInt(userInput);
+                int minutes = timeInput /100;
+                int seconds = timeInput % 100;
+
+                previewLabel.setText(String.format("%02d:%02d", minutes, seconds));
+            }
+
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                updatePreview();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                updatePreview();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                updatePreview();
+            }
+
+        });
+
         confirmButton = new JButton("OK");
         confirmButton.setFont(new Font("Arial", Font.BOLD, 24));
 
         JPanel centerPanel = new JPanel();
         centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
 
-        infoLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        previewLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         inputPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
         confirmButton.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         centerPanel.add(Box.createVerticalGlue());
-        centerPanel.add(infoLabel);
+        centerPanel.add(previewLabel);
         centerPanel.add(Box.createVerticalStrut(20));
         centerPanel.add(inputPanel);
         centerPanel.add(Box.createVerticalStrut(40));
@@ -47,18 +84,32 @@ public class SetupDialog {
         dialog.add(centerPanel, BorderLayout.CENTER);
 
         confirmButton.addActionListener(event -> {
-            String userInput = timeField.getText();
 
             try {
-                int newTime = Integer.parseInt(userInput);
-                if (newTime <= 0) {
+            String userInput = timeField.getText();
+            int timeInput = Integer.parseInt(userInput);
+            int minutes = timeInput / 100;
+            int seconds = timeInput % 100;
+            int totalSeconds = minutes * 60 + seconds;
+
+                if (totalSeconds <= 0) {
                     JOptionPane.showMessageDialog(dialog, "Time must be bigger than 0!");
                     timeField.setText("");
                     timeField.requestFocus();
                     return;
                 }
-                timerWindow.setTime(newTime);
+
+                if (seconds >= 60) {
+                    JOptionPane.showMessageDialog(dialog, "Last two digits must must be < 60!");
+                    timeField.setText("");
+                    timeField.requestFocus();
+                    return;
+
+                }
+
+                timerWindow.setTime(totalSeconds);
                 dialog.dispose();
+
             } catch (NumberFormatException e) {
                 JOptionPane.showMessageDialog(dialog, "invalid time Ò.ó");
                 timeField.setText("");
