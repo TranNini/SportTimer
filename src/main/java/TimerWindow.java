@@ -41,8 +41,12 @@ public class TimerWindow {
 
         timer = new Timer(1000, event -> {
             timeleft--;
-
             timerLabel.setText(formatTime(timeleft));
+
+
+            if (timeleft <= 10 && timeleft > 0 ) {
+                Toolkit.getDefaultToolkit().beep();
+            }
 
             if (timeleft <= 0) {
                 Timer runningTimer = (Timer) event.getSource();
