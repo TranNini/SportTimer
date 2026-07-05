@@ -54,35 +54,43 @@ public class TimerWindow {
                 runningTimer.stop();
                 timerLabel.setFont(new Font("Arial", Font.BOLD, 100));
                 timerLabel.setText("Well Done!");
+                startButton.setText("Start");
+                setTimeButton.setText("Set Time");
             }
-
         });
 
         startButton.addActionListener(event -> {
             if (timer.isRunning()) {
                 timer.stop();
-                timeleft = startTime;
-                timerLabel.setText(formatTime(timeleft));
-                startButton.setText("Start");
+                timerLabel.setFont(new Font("Arial",Font.BOLD, 260));
+                startButton.setText("Resume");
+                setTimeButton.setText("Restart");
             } else {
                 if (timeleft <= 0) {
                     timeleft = startTime;
 
                     timerLabel.setFont(new Font("Arial", Font.BOLD, 260));
                     timerLabel.setText(formatTime(timeleft));
-
-                    startButton.setText("Start");
-                    return;
                 }
 
                 timer.start();
-                startButton.setText("Stop");
-                Toolkit.getDefaultToolkit().beep();
+                startButton.setText("Pause");
+                setTimeButton.setText("Restart");
+                //Toolkit.getDefaultToolkit().beep();
             }
         });
 
             setTimeButton.addActionListener(event -> {
-                SetupDialog setupDialog = new SetupDialog(window,this);
+                if (setTimeButton.getText().equals("Set Time")) {
+                    new SetupDialog(window, this);
+                } else {
+                    timer.stop();
+                    timeleft = startTime;
+                    timerLabel.setFont(new Font("Arial", Font.BOLD,260));
+                    timerLabel.setText(formatTime(timeleft));
+                    startButton.setText("Start");
+                    setTimeButton.setText("Set Time");
+                }
             });
 
 
