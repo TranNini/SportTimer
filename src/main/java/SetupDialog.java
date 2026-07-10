@@ -8,13 +8,14 @@ public class SetupDialog {
 
     private JDialog dialog;
     private JTextField timeField;
+    private JTextField roundsField;
     private JButton confirmButton;
     private TimerWindow timerWindow;
 
     public SetupDialog(JFrame parentWindow, TimerWindow timerWindow) {
         this.timerWindow = timerWindow;
         dialog = new JDialog(parentWindow, "Set Time", true);
-        dialog.setSize(400, 250);
+        dialog.setSize(400, 300);
         dialog.setLocationRelativeTo(parentWindow);
         dialog.setLayout(new BorderLayout());
 
@@ -25,8 +26,18 @@ public class SetupDialog {
         timeField.setFont(new Font("Arial", Font.PLAIN, 30));
         timeField.setPreferredSize(new Dimension(100, 40));
 
+        roundsField = new JTextField();
+        roundsField.setFont(new Font("Arial", Font.PLAIN, 30));
+        roundsField.setPreferredSize(new Dimension(100,40));
+
         JPanel inputPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         inputPanel.add(timeField);
+
+        JLabel roundsLabel = new JLabel("Rounds");
+        roundsLabel.setFont(new Font("Arial",Font.BOLD,20));
+
+        JPanel roundsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        roundsPanel.add(roundsField);
 
 
 
@@ -71,12 +82,15 @@ public class SetupDialog {
 
         previewLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         inputPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        roundsLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         confirmButton.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         centerPanel.add(Box.createVerticalGlue());
         centerPanel.add(previewLabel);
         centerPanel.add(Box.createVerticalStrut(20));
         centerPanel.add(inputPanel);
+        centerPanel.add(roundsLabel);
+        centerPanel.add(roundsPanel);
         centerPanel.add(Box.createVerticalStrut(40));
         centerPanel.add(confirmButton);
         centerPanel.add(Box.createVerticalGlue());
@@ -87,7 +101,9 @@ public class SetupDialog {
 
             try {
             String userInput = timeField.getText();
+            String roundsInput = roundsField.getText();
             int timeInput = Integer.parseInt(userInput);
+            int rounds = Integer.parseInt(roundsInput);
             int minutes = timeInput / 100;
             int seconds = timeInput % 100;
             int totalSeconds = minutes * 60 + seconds;
@@ -107,7 +123,14 @@ public class SetupDialog {
 
                 }
 
-                timerWindow.setTime(totalSeconds);
+                if (rounds <=0) {
+                    JOptionPane.showMessageDialog(dialog, "Rounds must be bigger than 0");
+                    roundsField.setText("");
+                    roundsField.requestFocus();
+                    return;
+                }
+
+                timerWindow.setTimerSettings(totalSeconds, rounds);
                 dialog.dispose();
 
             } catch (NumberFormatException e) {
