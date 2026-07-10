@@ -11,7 +11,9 @@ public class TimerWindow {
     private JButton setTimeButton;
     private JPanel buttonPanel;
     private Timer timer;
-
+    private int currentRound;
+    private int totalRounds;
+    private JLabel roundLabel;
 
     public TimerWindow () {
 
@@ -19,6 +21,10 @@ public class TimerWindow {
 
         timerLabel = new JLabel(formatTime(timeleft), SwingConstants.CENTER);
         timerLabel.setFont(new Font("Arial", Font.BOLD, 260));
+
+        roundLabel = new JLabel("Round 1/1", SwingConstants.CENTER);
+        roundLabel.setFont(new Font("Arial", Font.BOLD, 50));
+        roundLabel.setBorder(BorderFactory.createEmptyBorder(40,0,0,0));
 
         startButton = new JButton("Start");
         startButton.setFont(new Font("Arial", Font.BOLD, 50));
@@ -33,6 +39,7 @@ public class TimerWindow {
 
         window.setLayout(new BorderLayout());
         window.add(timerLabel, BorderLayout.CENTER);
+        window.add(roundLabel,BorderLayout.NORTH);
         window.add(buttonPanel, BorderLayout.SOUTH);
 
         window.setExtendedState(JFrame.MAXIMIZED_BOTH);
@@ -135,6 +142,10 @@ public class TimerWindow {
         startTime = timeInput;
         timeleft = timeInput;
         timerLabel.setText(formatTime(timeleft));
+    }
+
+    private void updateRoundLabel() {
+        roundLabel.setText("Round" + currentRound + " / " + totalRounds);
     }
 
     private String formatTime(int totalSeconds) {
