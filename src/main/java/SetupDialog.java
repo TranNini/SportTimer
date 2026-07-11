@@ -20,7 +20,7 @@ public class SetupDialog {
         dialog.setLayout(new BorderLayout());
 
         JLabel previewLabel = new JLabel("Time 00:00");
-        previewLabel.setFont(new Font("Arial", Font.BOLD,30));
+        previewLabel.setFont(new Font("Arial", Font.BOLD, 30));
 
         timeField = new JTextField();
         timeField.setFont(new Font("Arial", Font.PLAIN, 30));
@@ -28,17 +28,16 @@ public class SetupDialog {
 
         roundsField = new JTextField();
         roundsField.setFont(new Font("Arial", Font.PLAIN, 30));
-        roundsField.setPreferredSize(new Dimension(100,40));
+        roundsField.setPreferredSize(new Dimension(100, 40));
 
         JPanel inputPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         inputPanel.add(timeField);
 
         JLabel roundsLabel = new JLabel("Rounds");
-        roundsLabel.setFont(new Font("Arial",Font.BOLD,20));
+        roundsLabel.setFont(new Font("Arial", Font.BOLD, 20));
 
         JPanel roundsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         roundsPanel.add(roundsField);
-
 
 
         timeField.getDocument().addDocumentListener(new DocumentListener() {
@@ -51,7 +50,7 @@ public class SetupDialog {
                     return;
                 }
                 int timeInput = Integer.parseInt(userInput);
-                int minutes = timeInput /100;
+                int minutes = timeInput / 100;
                 int seconds = timeInput % 100;
 
                 previewLabel.setText(String.format("%02d:%02d", minutes, seconds));
@@ -83,6 +82,7 @@ public class SetupDialog {
         previewLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         inputPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
         roundsLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        roundsPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
         confirmButton.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         centerPanel.add(Box.createVerticalGlue());
@@ -97,16 +97,24 @@ public class SetupDialog {
 
         dialog.add(centerPanel, BorderLayout.CENTER);
 
+        timeField.addActionListener(event -> {
+            roundsField.requestFocusInWindow();
+        });
+
+        roundsField.addActionListener(event -> {
+            confirmButton.doClick();
+        });
+
         confirmButton.addActionListener(event -> {
 
             try {
-            String userInput = timeField.getText();
-            String roundsInput = roundsField.getText();
-            int timeInput = Integer.parseInt(userInput);
-            int rounds = Integer.parseInt(roundsInput);
-            int minutes = timeInput / 100;
-            int seconds = timeInput % 100;
-            int totalSeconds = minutes * 60 + seconds;
+                String userInput = timeField.getText();
+                String roundsInput = roundsField.getText();
+                int timeInput = Integer.parseInt(userInput);
+                int rounds = Integer.parseInt(roundsInput);
+                int minutes = timeInput / 100;
+                int seconds = timeInput % 100;
+                int totalSeconds = minutes * 60 + seconds;
 
                 if (totalSeconds <= 0) {
                     JOptionPane.showMessageDialog(dialog, "Time must be bigger than 0!");
@@ -123,7 +131,7 @@ public class SetupDialog {
 
                 }
 
-                if (rounds <=0) {
+                if (rounds <= 0) {
                     JOptionPane.showMessageDialog(dialog, "Rounds must be bigger than 0");
                     roundsField.setText("");
                     roundsField.requestFocus();
@@ -134,7 +142,7 @@ public class SetupDialog {
                 dialog.dispose();
 
             } catch (NumberFormatException e) {
-                JOptionPane.showMessageDialog(dialog, "invalid time Ò.ó");
+                JOptionPane.showMessageDialog(dialog, "Numbers only, valid time input and rounds bigger than 0! Ò.ó");
                 timeField.setText("");
                 timeField.requestFocus();
             }
@@ -144,7 +152,6 @@ public class SetupDialog {
         InputMap inputMap = rootPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
         ActionMap actionMap = rootPane.getActionMap();
 
-        inputMap.put(KeyStroke.getKeyStroke("ENTER"), "pressConfirm");
         inputMap.put(KeyStroke.getKeyStroke("SPACE"), "pressConfirm");
         inputMap.put(KeyStroke.getKeyStroke("ESCAPE"), "closeDialog");
 
@@ -154,7 +161,6 @@ public class SetupDialog {
                 confirmButton.doClick();
             }
         });
-
         actionMap.put("closeDialog", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
