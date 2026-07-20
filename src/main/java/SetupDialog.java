@@ -193,7 +193,7 @@ public class SetupDialog {
                         return;
                     }
 
-                    timerWindow.setTimerSettings(totalSeconds, rounds);
+                    timerWindow.setTimerSettings(totalSeconds, rounds, totalBreakSeconds);
                     dialog.dispose();
 
                 } catch(NumberFormatException exception){
