@@ -9,7 +9,7 @@
     /* The full-screen colors of the phases; white text on all of them */
     --work: #d9480f;
     --break: #0b7285;
-    --done: #2b8a3e;
+    --done: #16a34a;
 
     --accent: var(--work);
 }
