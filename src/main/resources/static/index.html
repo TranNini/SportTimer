@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="color-scheme" content="light dark">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="SportTimer">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" href="favicon.png" type="image/png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <title>SportTimer</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main id="screen">
+    <div id="round" class="round">Round 1 / 1</div>
+    <div id="time" class="time">01:00</div>
+    <div class="buttons">
+        <button id="start" class="primary">Start</button>
+        <button id="set-time">Set Time</button>
+    </div>
+</main>
+
+<dialog id="setup">
+    <form id="setup-form" method="dialog" novalidate>
+        <label for="time-input" id="time-preview" class="preview">Time 01:00</label>
+        <input id="time-input" inputmode="numeric" enterkeyhint="next" autocomplete="off" placeholder="mmss">
+
+        <label for="rounds-input" class="preview">Rounds</label>
+        <input id="rounds-input" inputmode="numeric" enterkeyhint="next" autocomplete="off">
+
+        <label for="break-input" id="break-preview" class="preview">Break for 00:00</label>
+        <input id="break-input" inputmode="numeric" enterkeyhint="done" autocomplete="off" placeholder="mmss">
+
+        <p id="setup-error" class="error" role="alert"></p>
+        <div class="buttons">
+            <button type="button" id="cancel">Cancel</button>
+            <button type="submit" class="primary">OK</button>
+        </div>
+    </form>
+</dialog>
+
+<script src="app.js"></script>
+</body>
+</html>

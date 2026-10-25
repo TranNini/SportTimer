@@ -39,3 +39,6 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+### Notes for Claude, kept only locally ###
+CLAUDE.md
