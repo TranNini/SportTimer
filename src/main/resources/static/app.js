@@ -129,13 +129,15 @@ function tick() {
         }
     }
 
+    // The countdown starts 5 seconds before the end of a round, 10 before the end of a break
+    // (time to get back into position); the voice says the last 3
     const seconds = Math.ceil(msLeft / 1000);
     if (seconds !== shownSeconds) {
         showTime(seconds);
         if (seconds <= 3) {
             say(String(seconds));
             flash();
-        } else if (seconds <= 10) {
+        } else if (seconds <= (isBreak ? 10 : 5)) {
             beep();
         }
     }

@@ -1,13 +1,14 @@
 # SportTimer
 
 An interval timer for workouts: set the time per round, the number of rounds and an optional break.
-Made for running with the phone: the screen turns orange during a round, teal during a break and green at the end,
+For running, pilates and other workouts: the screen turns orange during a round, teal during a break and green at the end,
 with a ring that empties as the time runs out and a line showing what comes next.
 
 Sounds:
 - a voice says "Round 2 of 5" (or "Last round!"), "Break, 30 seconds", "Halfway" (rounds of 20 s or more),
   counts "3, 2, 1" and says "Well done!" at the end
-- a short beep from 10 to 4 seconds, a long one when a round or break ends
+- a short beep from 5 to 4 seconds before the end of a round, from 10 to 4 before the end of a break (time to get
+  back into position), and a long one when a round or break ends
 - the sounds mix with music or podcasts instead of stopping them; the silent switch mutes the beeps
 
 ## Use it
