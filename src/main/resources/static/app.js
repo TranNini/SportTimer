@@ -1,8 +1,9 @@
 // The timer runs here in the browser, so it keeps working without internet once the page is installed (sw.js).
 
-const screen = document.getElementById('screen');
 const roundLabel = document.getElementById('round');
 const timerLabel = document.getElementById('time');
+const progressRing = document.getElementById('progress');
+const nextLabel = document.getElementById('next');
 const startButton = document.getElementById('start');
 const setTimeButton = document.getElementById('set-time');
 
@@ -15,16 +16,20 @@ const timePreview = document.getElementById('time-preview');
 const breakPreview = document.getElementById('break-preview');
 const setupError = document.getElementById('setup-error');
 
+const RING_LENGTH = 282.743; // 2 * pi * 45, the circle in index.html
+
 // The settings, in seconds; remembered on this device
 let settings = loadSettings();
 
 let currentRound = 1;
 let isBreak = false;
 let isDone = false;
+let started = false;     // false until Start, and again after Restart / Set Time
 let running = false;
 let endsAt = 0;          // while running: when the current round or break ends (ms)
 let timeLeftMs = 0;      // while paused: what is left of it
 let shownSeconds = 0;
+let halfwaySaid = false;
 let ticker = null;
 
 // --- Settings ---
@@ -53,12 +58,16 @@ function saveSettings() {
 
 function resetTimer() {
     stopTicker();
+    stopSpeaking();
     currentRound = 1;
     isBreak = false;
     isDone = false;
+    started = false;
+    halfwaySaid = false;
     timeLeftMs = settings.time * 1000;
     showTime(settings.time);
-    updateRoundLabel();
+    showRing(1);
+    updateLabels();
     startButton.textContent = 'Start';
     setTimeButton.textContent = 'Set Time';
 }
@@ -68,10 +77,15 @@ function start() {
     if (isDone) {
         resetTimer();
     }
+    if (!started) {
+        started = true;
+        say(roundAnnouncement());
+    }
     endsAt = Date.now() + timeLeftMs;
     running = true;
     ticker = setInterval(tick, 100);
     keepScreenOn();
+    updateLabels();
     startButton.textContent = 'Pause';
     setTimeButton.textContent = 'Restart';
 }
@@ -79,6 +93,8 @@ function start() {
 function pause() {
     timeLeftMs = Math.max(0, endsAt - Date.now());
     stopTicker();
+    stopSpeaking();
+    updateLabels();
     startButton.textContent = 'Resume';
     setTimeButton.textContent = 'Restart';
 }
@@ -101,10 +117,25 @@ function tick() {
     if (!running) {
         return;
     }
-    const seconds = Math.ceil((endsAt - now) / 1000);
+    const msLeft = endsAt - now;
+    showRing(msLeft / (phaseSeconds() * 1000));
+
+    // "Halfway" in rounds of 20 seconds or more, not when catching up after a sleep
+    const halfMs = settings.time * 500;
+    if (!isBreak && !halfwaySaid && settings.time >= 20 && msLeft <= halfMs) {
+        halfwaySaid = true;
+        if (msLeft > halfMs - 1500) {
+            say('Halfway');
+        }
+    }
+
+    const seconds = Math.ceil(msLeft / 1000);
     if (seconds !== shownSeconds) {
         showTime(seconds);
-        if (seconds <= 10) {
+        if (seconds <= 3) {
+            say(String(seconds));
+            flash();
+        } else if (seconds <= 10) {
             beep();
         }
     }
@@ -112,9 +143,6 @@ function tick() {
 
 // The round or break that ended at endsAt is over: go on with the next one, or finish
 function finishPhase(onTime) {
-    if (onTime) {
-        beep(true);
-    }
     if (isBreak) {
         isBreak = false;
         currentRound++;
@@ -124,8 +152,13 @@ function finishPhase(onTime) {
         isDone = true;
         timeLeftMs = 0;
         showDone();
+        updateLabels();
         startButton.textContent = 'Start';
         setTimeButton.textContent = 'Set Time';
+        if (onTime) {
+            beep(true);
+            say('Well done!');
+        }
         return;
     } else if (settings.breakTime > 0) {
         isBreak = true;
@@ -134,26 +167,72 @@ function finishPhase(onTime) {
         currentRound++;
         endsAt += settings.time * 1000;
     }
-    updateRoundLabel();
+    halfwaySaid = false;
+    if (onTime) {
+        beep(true);
+        say(isBreak ? 'Break, ' + spokenDuration(settings.breakTime) : roundAnnouncement());
+    }
+    updateLabels();
     showTime(Math.ceil((endsAt - Date.now()) / 1000));
+}
+
+// How long the current round or break is, in seconds
+function phaseSeconds() {
+    return isBreak ? settings.breakTime : settings.time;
 }
 
 function showTime(seconds) {
     shownSeconds = seconds;
     timerLabel.textContent = formatTime(seconds);
     timerLabel.classList.remove('done');
-    timerLabel.classList.toggle('ending', running && seconds <= 10);
+    timerLabel.classList.toggle('short', seconds < 60);
 }
 
 function showDone() {
     timerLabel.textContent = 'Well Done!';
-    timerLabel.classList.remove('ending');
+    timerLabel.classList.remove('short');
     timerLabel.classList.add('done');
+    showRing(1);
 }
 
-function updateRoundLabel() {
+// 1 = full ring, 0 = empty
+function showRing(fraction) {
+    progressRing.style.strokeDashoffset = String(RING_LENGTH * (1 - Math.min(1, Math.max(0, fraction))));
+}
+
+// The screen lights up on 3, 2, 1
+function flash() {
+    document.body.classList.remove('flash');
+    void document.body.offsetWidth; // restarts the animation
+    document.body.classList.add('flash');
+}
+
+// The round on top, the color of the screen and what comes next
+function updateLabels() {
     roundLabel.textContent = (isBreak ? 'Break ' : 'Round ') + currentRound + ' / ' + settings.rounds;
-    screen.classList.toggle('break', isBreak);
+    document.body.dataset.phase = isDone ? 'done' : !started ? 'idle' : isBreak ? 'break' : 'work';
+    document.body.classList.toggle('paused', started && !running && !isDone);
+    nextLabel.textContent = nextText();
+}
+
+function nextText() {
+    if (isDone) {
+        return settings.rounds + (settings.rounds === 1 ? ' round' : ' rounds') + ' done';
+    }
+    if (!started) {
+        return settings.rounds + ' × ' + shortTime(settings.time)
+            + (settings.breakTime > 0 && settings.rounds > 1 ? ', break ' + shortTime(settings.breakTime) : '');
+    }
+    if (!running) {
+        return 'Paused';
+    }
+    if (isBreak) {
+        return currentRound + 1 === settings.rounds ? 'Next: last round' : 'Next: round ' + (currentRound + 1);
+    }
+    if (currentRound >= settings.rounds) {
+        return settings.rounds > 1 ? 'Last round' : '';
+    }
+    return settings.breakTime > 0 ? 'Next: break ' + shortTime(settings.breakTime) : 'Next: round ' + (currentRound + 1);
 }
 
 // 90 -> "01:30", 45 -> "45"
@@ -166,6 +245,11 @@ function formatTime(totalSeconds) {
     return String(seconds);
 }
 
+// 90 -> "1:30", 45 -> "0:45"
+function shortTime(totalSeconds) {
+    return Math.floor(totalSeconds / 60) + ':' + String(totalSeconds % 60).padStart(2, '0');
+}
+
 // --- Sound ---
 
 let audio = null;
@@ -173,7 +257,8 @@ let audio = null;
 // Browsers only play sound after a tap, so this runs on Start
 function unlockSound() {
     if (navigator.audioSession) {
-        navigator.audioSession.type = 'playback'; // iPhone: beep even with the silent switch on
+        // iPhone: mix with music or podcasts instead of stopping them (the silent switch then mutes the beeps)
+        navigator.audioSession.type = 'ambient';
     }
     if (!audio) {
         const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -198,6 +283,45 @@ function beep(long) {
     oscillator.connect(volume).connect(audio.destination);
     oscillator.start();
     oscillator.stop(audio.currentTime + length);
+}
+
+// --- Voice (the phone's own voices, so it works offline too) ---
+
+function say(text) {
+    if (!('speechSynthesis' in window)) {
+        return;
+    }
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'en-US';
+    utterance.rate = 1.1;
+    speechSynthesis.speak(utterance);
+}
+
+function stopSpeaking() {
+    if ('speechSynthesis' in window) {
+        speechSynthesis.cancel();
+    }
+}
+
+function roundAnnouncement() {
+    if (settings.rounds === 1) {
+        return 'Go!';
+    }
+    if (currentRound === settings.rounds) {
+        return 'Last round!';
+    }
+    return 'Round ' + currentRound + ' of ' + settings.rounds;
+}
+
+// 90 -> "1 minute 30", 45 -> "45 seconds", 120 -> "2 minutes"
+function spokenDuration(totalSeconds) {
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    if (minutes === 0) {
+        return seconds + ' seconds';
+    }
+    const minuteText = minutes + (minutes === 1 ? ' minute' : ' minutes');
+    return seconds === 0 ? minuteText : minuteText + ' ' + seconds;
 }
 
 // --- Screen stays on while the timer runs (a locked phone stops the page) ---

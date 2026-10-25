@@ -13,10 +13,21 @@
     <title>SportTimer</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<!-- data-phase: idle, work, break or done; it sets the colors -->
+<body data-phase="idle">
 <main id="screen">
     <div id="round" class="round">Round 1 / 1</div>
-    <div id="time" class="time">01:00</div>
+    <div class="stage">
+        <div class="dial">
+            <!-- The ring empties as the round or break runs out -->
+            <svg class="ring" viewBox="0 0 100 100" aria-hidden="true">
+                <circle class="track" cx="50" cy="50" r="45"/>
+                <circle id="progress" class="progress" cx="50" cy="50" r="45"/>
+            </svg>
+            <div id="time" class="time">01:00</div>
+        </div>
+    </div>
+    <div id="next" class="next"></div>
     <div class="buttons">
         <button id="start" class="primary">Start</button>
         <button id="set-time">Set Time</button>
