@@ -13,21 +13,10 @@
     <title>SportTimer</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<!-- data-phase: idle, work, break or done; it sets the colors -->
-<body data-phase="idle">
+<body>
 <main id="screen">
     <div id="round" class="round">Round 1 / 1</div>
-    <div class="stage">
-        <div class="dial">
-            <!-- The ring empties as the round or break runs out -->
-            <svg class="ring" viewBox="0 0 100 100" aria-hidden="true">
-                <circle class="track" cx="50" cy="50" r="45"/>
-                <circle id="progress" class="progress" cx="50" cy="50" r="45"/>
-            </svg>
-            <div id="time" class="time">01:00</div>
-        </div>
-    </div>
-    <div id="next" class="next"></div>
+    <div id="time" class="time">01:00</div>
     <div class="buttons">
         <button id="start" class="primary">Start</button>
         <button id="set-time">Set Time</button>
@@ -36,6 +25,13 @@
 
 <dialog id="setup">
     <form id="setup-form" method="dialog" novalidate>
+        <!-- The mode sets how early the countdown before the end of a round or break starts -->
+        <div class="modes" role="radiogroup" aria-label="Mode">
+            <label><input type="radio" name="mode" value="running"> Running</label>
+            <label><input type="radio" name="mode" value="pilates"> Pilates</label>
+        </div>
+        <p id="mode-hint" class="hint"></p>
+
         <label for="time-input" id="time-preview" class="preview">Time 01:00</label>
         <input id="time-input" inputmode="numeric" enterkeyhint="next" autocomplete="off" placeholder="mmss">
 

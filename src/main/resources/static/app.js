@@ -1,9 +1,8 @@
 // The timer runs here in the browser, so it keeps working without internet once the page is installed (sw.js).
 
+const screen = document.getElementById('screen');
 const roundLabel = document.getElementById('round');
 const timerLabel = document.getElementById('time');
-const progressRing = document.getElementById('progress');
-const nextLabel = document.getElementById('next');
 const startButton = document.getElementById('start');
 const setTimeButton = document.getElementById('set-time');
 
@@ -15,10 +14,13 @@ const breakTimeField = document.getElementById('break-input');
 const timePreview = document.getElementById('time-preview');
 const breakPreview = document.getElementById('break-preview');
 const setupError = document.getElementById('setup-error');
+const modeHint = document.getElementById('mode-hint');
 
-const RING_LENGTH = 282.743; // 2 * pi * 45, the circle in index.html
+// How many seconds before the end of a round or break the countdown starts: beeps, then the voice says 3, 2, 1.
+// Pilates needs time to get back into position.
+const COUNTDOWN = {running: 3, pilates: 10};
 
-// The settings, in seconds; remembered on this device
+// The settings (times in seconds) and the mode; remembered on this device
 let settings = loadSettings();
 
 let currentRound = 1;
@@ -38,12 +40,12 @@ function loadSettings() {
     try {
         const saved = JSON.parse(localStorage.getItem('settings'));
         if (saved && saved.time > 0 && saved.rounds > 0 && saved.breakTime >= 0) {
-            return saved;
+            return {...saved, mode: COUNTDOWN[saved.mode] ? saved.mode : 'running'};
         }
     } catch (e) {
         // no saved settings (or no storage): use the defaults
     }
-    return {time: 60, rounds: 1, breakTime: 0};
+    return {time: 60, rounds: 1, breakTime: 0, mode: 'running'};
 }
 
 function saveSettings() {
@@ -66,8 +68,7 @@ function resetTimer() {
     halfwaySaid = false;
     timeLeftMs = settings.time * 1000;
     showTime(settings.time);
-    showRing(1);
-    updateLabels();
+    updateRoundLabel();
     startButton.textContent = 'Start';
     setTimeButton.textContent = 'Set Time';
 }
@@ -85,7 +86,6 @@ function start() {
     running = true;
     ticker = setInterval(tick, 100);
     keepScreenOn();
-    updateLabels();
     startButton.textContent = 'Pause';
     setTimeButton.textContent = 'Restart';
 }
@@ -94,7 +94,7 @@ function pause() {
     timeLeftMs = Math.max(0, endsAt - Date.now());
     stopTicker();
     stopSpeaking();
-    updateLabels();
+    showTime(shownSeconds);
     startButton.textContent = 'Resume';
     setTimeButton.textContent = 'Restart';
 }
@@ -118,7 +118,6 @@ function tick() {
         return;
     }
     const msLeft = endsAt - now;
-    showRing(msLeft / (phaseSeconds() * 1000));
 
     // "Halfway" in rounds of 20 seconds or more, not when catching up after a sleep
     const halfMs = settings.time * 500;
@@ -129,15 +128,12 @@ function tick() {
         }
     }
 
-    // The countdown starts 5 seconds before the end of a round, 10 before the end of a break
-    // (time to get back into position); the voice says the last 3
     const seconds = Math.ceil(msLeft / 1000);
     if (seconds !== shownSeconds) {
         showTime(seconds);
         if (seconds <= 3) {
             say(String(seconds));
-            flash();
-        } else if (seconds <= (isBreak ? 10 : 5)) {
+        } else if (seconds <= countdownSeconds()) {
             beep();
         }
     }
@@ -154,7 +150,6 @@ function finishPhase(onTime) {
         isDone = true;
         timeLeftMs = 0;
         showDone();
-        updateLabels();
         startButton.textContent = 'Start';
         setTimeButton.textContent = 'Set Time';
         if (onTime) {
@@ -174,67 +169,30 @@ function finishPhase(onTime) {
         beep(true);
         say(isBreak ? 'Break, ' + spokenDuration(settings.breakTime) : roundAnnouncement());
     }
-    updateLabels();
+    updateRoundLabel();
     showTime(Math.ceil((endsAt - Date.now()) / 1000));
 }
 
-// How long the current round or break is, in seconds
-function phaseSeconds() {
-    return isBreak ? settings.breakTime : settings.time;
+function countdownSeconds() {
+    return COUNTDOWN[settings.mode];
 }
 
 function showTime(seconds) {
     shownSeconds = seconds;
     timerLabel.textContent = formatTime(seconds);
     timerLabel.classList.remove('done');
-    timerLabel.classList.toggle('short', seconds < 60);
+    timerLabel.classList.toggle('ending', running && seconds <= countdownSeconds());
 }
 
 function showDone() {
     timerLabel.textContent = 'Well Done!';
-    timerLabel.classList.remove('short');
+    timerLabel.classList.remove('ending');
     timerLabel.classList.add('done');
-    showRing(1);
 }
 
-// 1 = full ring, 0 = empty
-function showRing(fraction) {
-    progressRing.style.strokeDashoffset = String(RING_LENGTH * (1 - Math.min(1, Math.max(0, fraction))));
-}
-
-// The screen lights up on 3, 2, 1
-function flash() {
-    document.body.classList.remove('flash');
-    void document.body.offsetWidth; // restarts the animation
-    document.body.classList.add('flash');
-}
-
-// The round on top, the color of the screen and what comes next
-function updateLabels() {
+function updateRoundLabel() {
     roundLabel.textContent = (isBreak ? 'Break ' : 'Round ') + currentRound + ' / ' + settings.rounds;
-    document.body.dataset.phase = isDone ? 'done' : !started ? 'idle' : isBreak ? 'break' : 'work';
-    document.body.classList.toggle('paused', started && !running && !isDone);
-    nextLabel.textContent = nextText();
-}
-
-function nextText() {
-    if (isDone) {
-        return settings.rounds + (settings.rounds === 1 ? ' round' : ' rounds') + ' done';
-    }
-    if (!started) {
-        return settings.rounds + ' × ' + shortTime(settings.time)
-            + (settings.breakTime > 0 && settings.rounds > 1 ? ', break ' + shortTime(settings.breakTime) : '');
-    }
-    if (!running) {
-        return 'Paused';
-    }
-    if (isBreak) {
-        return currentRound + 1 === settings.rounds ? 'Next: last round' : 'Next: round ' + (currentRound + 1);
-    }
-    if (currentRound >= settings.rounds) {
-        return settings.rounds > 1 ? 'Last round' : '';
-    }
-    return settings.breakTime > 0 ? 'Next: break ' + shortTime(settings.breakTime) : 'Next: round ' + (currentRound + 1);
+    screen.classList.toggle('break', isBreak);
 }
 
 // 90 -> "01:30", 45 -> "45"
@@ -245,11 +203,6 @@ function formatTime(totalSeconds) {
         return String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0');
     }
     return String(seconds);
-}
-
-// 90 -> "1:30", 45 -> "0:45"
-function shortTime(totalSeconds) {
-    return Math.floor(totalSeconds / 60) + ':' + String(totalSeconds % 60).padStart(2, '0');
 }
 
 // --- Sound ---
@@ -396,6 +349,7 @@ function openSetup() {
     timeField.value = toMmss(settings.time);
     roundsField.value = settings.rounds;
     breakTimeField.value = settings.breakTime > 0 ? toMmss(settings.breakTime) : '';
+    setupForm.elements.mode.value = settings.mode;
     setupError.textContent = '';
     updatePreviews();
     setupDialog.showModal();
@@ -419,6 +373,11 @@ function previewText(text) {
 function updatePreviews() {
     timePreview.textContent = 'Time ' + previewText(timeField.value);
     breakPreview.textContent = 'Break for ' + previewText(breakTimeField.value);
+    modeHint.textContent = 'Countdown: last ' + COUNTDOWN[setupForm.elements.mode.value] + ' seconds';
+}
+
+for (const radio of setupForm.elements.mode) {
+    radio.addEventListener('change', updatePreviews);
 }
 
 for (const field of [timeField, roundsField, breakTimeField]) {
@@ -441,7 +400,7 @@ function nextFieldOnEnter(event, next) {
 }
 
 setupDialog.addEventListener('keydown', event => {
-    if (event.key === ' ' && event.target instanceof HTMLInputElement) {
+    if (event.key === ' ' && event.target instanceof HTMLInputElement && event.target.type !== 'radio') {
         event.preventDefault();
         setupForm.requestSubmit();
     }
@@ -465,7 +424,8 @@ setupForm.addEventListener('submit', event => {
         return showSetupError('The break can have at most 59 seconds', breakTimeField);
     }
 
-    settings = {time: mmssToSeconds(timeInput), rounds: rounds, breakTime: mmssToSeconds(breakInput)};
+    settings = {time: mmssToSeconds(timeInput), rounds: rounds, breakTime: mmssToSeconds(breakInput),
+        mode: setupForm.elements.mode.value};
     saveSettings();
     resetTimer();
     setupDialog.close();
