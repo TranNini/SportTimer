@@ -41,6 +41,7 @@ or run `sporttimer.SportTimerApp` in IntelliJ, then open http://localhost:8082.
 | `SportTimerApp.java` | starts the app, which only serves the files in `static/` |
 | `static/index.html`, `style.css` | the timer screen and the Set Time dialog |
 | `static/app.js` | the timer: rounds, breaks, modes, beeps, voice, keyboard, keeping the screen on |
+| `static/voice-3.m4a`, `-2`, `-1` | the recorded "3, 2, 1", so the countdown is on time |
 | `static/sw.js` | keeps a copy of the app on the device, so it works offline |
 | `static/manifest.webmanifest`, icons | name and icon for "Add to Home Screen" |
 | `Dockerfile` | the image for the NAS |

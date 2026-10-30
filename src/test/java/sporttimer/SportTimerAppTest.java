@@ -29,7 +29,8 @@ class SportTimerAppTest {
     @Test
     void servesEveryFileTheOfflineCopyNeeds() throws Exception {
         for (String file : new String[]{"index.html", "style.css", "app.js", "sw.js", "manifest.webmanifest",
-                "favicon.png", "apple-touch-icon.png", "icon-192.png", "icon-512.png"}) {
+                "favicon.png", "apple-touch-icon.png", "icon-192.png", "icon-512.png",
+                "voice-3.m4a", "voice-2.m4a", "voice-1.m4a"}) {
             mvc.perform(get("/" + file))
                     .andExpect(status().isOk())
                     .andExpect(header().string("Cache-Control", containsString("no-cache")));

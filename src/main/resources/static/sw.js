@@ -4,7 +4,8 @@
 
 const CACHE = 'sporttimer';
 const FILES = ['./', 'index.html', 'style.css', 'app.js', 'manifest.webmanifest',
-    'favicon.png', 'apple-touch-icon.png', 'icon-192.png', 'icon-512.png'];
+    'favicon.png', 'apple-touch-icon.png', 'icon-192.png', 'icon-512.png',
+    'voice-3.m4a', 'voice-2.m4a', 'voice-1.m4a'];
 
 self.addEventListener('install', event => {
     event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(FILES)));

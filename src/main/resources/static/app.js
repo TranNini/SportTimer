@@ -132,7 +132,7 @@ function tick() {
     if (seconds !== shownSeconds) {
         showTime(seconds);
         if (seconds <= 3) {
-            say(String(seconds));
+            sayCount(seconds);
         } else if (seconds <= countdownSeconds()) {
             beep();
         }
@@ -222,6 +222,7 @@ function unlockSound() {
     if (audio && audio.state !== 'running') {
         audio.resume();
     }
+    loadCountdownVoice();
 }
 
 // A short beep for the countdown, a long one when a round or break ends
@@ -241,6 +242,49 @@ function beep(long) {
 }
 
 // --- Voice (the phone's own voices, so it works offline too) ---
+
+// 3, 2, 1 are recordings (voice-3.m4a ...) played like the beeps: the speech voice sometimes starts late,
+// and as it queues what it has to say, the numbers then come too late and one right after the other
+const countdownVoice = {};
+
+function loadCountdownVoice() {
+    if (!audio) {
+        return;
+    }
+    for (const n of [3, 2, 1]) {
+        if (countdownVoice[n]) {
+            continue;
+        }
+        fetch('voice-' + n + '.m4a')
+            .then(response => response.arrayBuffer())
+            .then(data => audio.decodeAudioData(data))
+            .then(buffer => countdownVoice[n] = {buffer, start: firstSound(buffer)})
+            .catch(() => {}); // the speech voice says it instead
+    }
+}
+
+// Where the word starts in the recording (seconds), so it is heard right on the second
+function firstSound(buffer) {
+    const samples = buffer.getChannelData(0);
+    for (let i = 0; i < samples.length; i++) {
+        if (Math.abs(samples[i]) > 0.02) {
+            return i / buffer.sampleRate;
+        }
+    }
+    return 0;
+}
+
+function sayCount(n) {
+    const clip = countdownVoice[n];
+    if (!clip) {
+        say(String(n));
+        return;
+    }
+    const source = audio.createBufferSource();
+    source.buffer = clip.buffer;
+    source.connect(audio.destination);
+    source.start(0, clip.start);
+}
 
 function say(text) {
     if (!('speechSynthesis' in window)) {
